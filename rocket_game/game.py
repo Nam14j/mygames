@@ -4,6 +4,8 @@ import random
 
 new_width = 100
 new_height = 100
+asteroid_count = 4
+
 
 pygame.init()
 pygame.font.init()
@@ -55,6 +57,7 @@ class Asteroid:
 
 try:
     asteroid_img = pygame.image.load("asteroid.jpg").convert_alpha()
+    asteroid_img = pygame.transform.scale(asteroid_img, (50, 50))
 except pygame.error:
     print("Error")
     pygame.quit()
@@ -67,6 +70,14 @@ rocket_x = (screen_width - rocket_img.get_width()) // 2
 rocket_y = (screen_height - rocket_img.get_height()) // 2 + 175
 rocket_speed = 10
 rocket_visible = True
+
+
+asteroids = []
+
+for i in range(asteroid_count):
+    asteroid_y = random.randint(-600, -10)
+    asteroid_speed = random.randint(3, 6)
+    asteroids.append(Asteroid(asteroid_y, asteroid_speed))
 
 #asteroid_x = random.randint(0, screen_width - asteroid_img.get_width())
 asteroid_y = -asteroid_img.get_height()
@@ -90,6 +101,11 @@ while running:
 
 
     rocket_rect = rocket_img.get_rect(topleft=(rocket_x, rocket_y))
+
+    for asteroid in asteroids:
+        asteroid.draw(screen)
+        asteroid.update()
+
     #asteroid_rect = asteroid_img.get_rect(topleft=(asteroid_x, asteroid_y))
     flag_hit_floor = asteroid.update()
 
@@ -113,11 +129,11 @@ while running:
     rocket_x = max(0, min(rocket_x, screen_width - rocket_img.get_width()))
 
 
-    if asteroid.rect.colliderect(rocket_rect) and not hit_reported:
-        screen.blit(text_surface, text_rect)
-        rocket_visible = not rocket_visible
-        hit_reported = True
-        running = False 
+    for asteroid in asteroids:
+        if asteroid.rect.colliderect(rocket_rect) and not hit_reported:
+            screen.blit(text_surface, text_rect)
+            hit_reported = True
+            running = False 
 
     if hit_reported:
         screen.fill((0, 0, 0))
