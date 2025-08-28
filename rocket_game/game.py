@@ -41,6 +41,21 @@ rocket_x = (screen_width - rocket_img.get_width()) // 2
 rocket_y = (screen_height - rocket_img.get_height()) // 2 + 175
 rocket_speed = 10
 
+class Laser:
+    def __init__(self, x, y, speed):
+        self.x = x
+        self.y = y
+        self.speed = speed
+        self.rect = pygame.Rect(x, y, 5, 10)
+
+    def draw(self, screen):
+        pygame.draw.rect(screen, (255, 0, 0), self.rect)
+
+    def update(self):
+        self.y -= self.speed
+        self.rect.topleft = (self.x, self.y)
+
+lasers = []
 asteroids = []
 for i in range(asteroid_count):
     asteroid_y = random.randint(-600, -10)
@@ -68,10 +83,16 @@ while running:
                         asteroid_y = random.randint(-600, -10)
                         asteroid_speed = random.randint(3, 6)
                         asteroids.append(Asteroid(asteroid_y, asteroid_speed))
+                    lasers = []
                     start_ticks = pygame.time.get_ticks()
                     game_over = False
                 elif event.key == pygame.K_q:
                     running = False
+            else:
+                if event.key == pygame.K_SPACE:
+                    laser_x = rocket_x + rocket_img.get_width() // 2 - 2
+                    laser_y = rocket_y
+                    lasers.append(Laser(laser_x, laser_y, 10))
 
     if not game_over:
         keys = pygame.key.get_pressed()
@@ -88,8 +109,25 @@ while running:
                 game_over = True
                 elapsed_seconds = (pygame.time.get_ticks() - start_ticks) // 1000
 
+        for laser in lasers[:]:
+            laser.update()
+            if laser.y < 0:
+                lasers.remove(laser)
+            else:
+                for asteroid in asteroids[:]:
+                    if laser.rect.colliderect(asteroid.rect):
+                        asteroids.remove(asteroid)
+                        lasers.remove(laser)
+                        new_y = random.randint(-600, -10)
+                        new_speed = random.randint(3, 6)
+                        asteroids.append(Asteroid(new_y, new_speed))
+                        break
+
     for asteroid in asteroids:
         asteroid.draw(screen)
+
+    for laser in lasers:
+        laser.draw(screen)
 
     screen.blit(rocket_img, (rocket_x, rocket_y))
 
