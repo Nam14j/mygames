@@ -1,6 +1,6 @@
 import pygame
-import sys
 import random
+asteroid_hit_laser = 0
 
 new_width = 100
 new_height = 100
@@ -85,6 +85,7 @@ while running:
                         asteroids.append(Asteroid(asteroid_y, asteroid_speed))
                     lasers = []
                     start_ticks = pygame.time.get_ticks()
+                    asteroid_hit_laser = 0
                     game_over = False
                 elif event.key == pygame.K_q:
                     running = False
@@ -116,6 +117,7 @@ while running:
             else:
                 for asteroid in asteroids[:]:
                     if laser.rect.colliderect(asteroid.rect):
+                        asteroid_hit_laser += 1
                         asteroids.remove(asteroid)
                         lasers.remove(laser)
                         new_y = random.randint(-600, -10)
@@ -139,6 +141,10 @@ while running:
         )
         text_rect = text_surface.get_rect(center=(screen_width // 2, screen_height // 2))
         screen.blit(text_surface, text_rect)
+
+    score_text = font.render(f"Destroyed: {asteroid_hit_laser}", True, (255, 255, 255))
+    score_rect = score_text.get_rect(topright=(screen_width - 10, 10))
+    screen.blit(score_text, score_rect)
 
     pygame.display.flip()
     clock.tick(60)
