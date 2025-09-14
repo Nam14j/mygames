@@ -6,8 +6,10 @@ pygame.display.set_caption("Pac-Man")
 
 Pac_Man_open = pygame.transform.scale(pygame.image.load("pack_man_drawing-removebg-preview.png").convert_alpha(), (25, 25))
 Pac_Man_close = pygame.transform.scale(pygame.image.load("pack_open_drawing-removebg-preview.png").convert_alpha(), (25, 25))
+Ghost = pygame.transform.scale(pygame.image.load("Ghost-removebg-preview.png").convert_alpha(), (25, 25))
 
 pacman = Pac_Man_open.get_rect(center=(400, 300))
+ghost = Ghost.get_rect(center=(200, 200))
 speed = 5
 direction = None
 
@@ -16,26 +18,19 @@ maze = [
     pygame.Rect(50, 530, 700, 20),
     pygame.Rect(50, 50, 20, 500),
     pygame.Rect(730, 50, 20, 500),
-
     pygame.Rect(150, 100, 200, 20),
     pygame.Rect(450, 100, 200, 20),
-
     pygame.Rect(150, 180, 100, 20),
     pygame.Rect(550, 180, 100, 20),
-
     pygame.Rect(300, 180, 20, 100),
     pygame.Rect(480, 180, 20, 100),
-
     pygame.Rect(200, 280, 150, 20),
     pygame.Rect(450, 280, 150, 20),
-
     pygame.Rect(200, 360, 100, 20),
     pygame.Rect(550, 360, 100, 20),
-
     pygame.Rect(350, 360, 100, 20),
     pygame.Rect(350, 400, 20, 80),
     pygame.Rect(430, 400, 20, 80),
-
     pygame.Rect(200, 460, 150, 20),
     pygame.Rect(450, 460, 150, 20),
 ]
@@ -62,7 +57,6 @@ score = 0
 
 while running:
     clock.tick(30)
-
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
@@ -121,6 +115,7 @@ while running:
     for dot in dots:
         pygame.draw.circle(screen, (255, 255, 0), dot.center, 4)
     screen.blit(rotated_img, pacman.topleft)
+    screen.blit(Ghost, ghost.topleft)
 
     font = pygame.font.SysFont(None, 36)
     score_text = font.render(f"Score: {score}", True, (255, 255, 255))
