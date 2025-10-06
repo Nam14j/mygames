@@ -1,3 +1,4 @@
+from random import choice
 import pygame
 
 pygame.init()
@@ -6,10 +7,9 @@ pygame.display.set_caption("Pac-Man")
 
 Pac_Man_open = pygame.transform.scale(pygame.image.load("pack_man_drawing-removebg-preview.png").convert_alpha(), (25, 25))
 Pac_Man_close = pygame.transform.scale(pygame.image.load("pack_open_drawing-removebg-preview.png").convert_alpha(), (25, 25))
-Ghost = pygame.transform.scale(pygame.image.load("Ghost-removebg-preview.png").convert_alpha(), (25, 25))
+Ghost_img = pygame.transform.scale(pygame.image.load("Ghost-removebg-preview.png").convert_alpha(), (25, 25))
 
 pacman = Pac_Man_open.get_rect(center=(400, 300))
-ghost = Ghost.get_rect(center=(200, 200))
 speed = 5
 direction = None
 
@@ -40,13 +40,19 @@ grid_size = 30
 for x in range(70, 730, grid_size):
     for y in range(70, 530, grid_size):
         dot_rect = pygame.Rect(x, y, 8, 8)
-        is_valid = True
-        for wall in maze:
-            if dot_rect.colliderect(wall):
-                is_valid = False
-                break
-        if is_valid:
+        if not any(dot_rect.colliderect(wall) for wall in maze):
             dots.append(dot_rect)
+
+ghost = pygame.Rect(0, 0, 25, 25)
+ghost_speed = 3
+valid_spawn = False
+while not valid_spawn:
+    ghost.x = choice(range(70, 730))
+    ghost.y = choice(range(70, 530))
+    if not any(ghost.colliderect(wall) for wall in maze):
+        valid_spawn = True
+
+ghost_direction = choice(["LEFT", "RIGHT", "UP", "DOWN"])
 
 clock = pygame.time.Clock()
 running = True
@@ -60,7 +66,7 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
-        if event.type == pygame.KEYDOWN:
+        elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_LEFT:
                 direction = "LEFT"
             elif event.key == pygame.K_RIGHT:
@@ -80,10 +86,8 @@ while running:
     elif direction == "DOWN":
         pacman.y += speed
 
-    for wall in maze:
-        if pacman.colliderect(wall):
-            pacman = old_pos
-            break
+    if any(pacman.colliderect(wall) for wall in maze):
+        pacman = old_pos
 
     for dot in dots[:]:
         if pacman.colliderect(dot):
@@ -95,10 +99,7 @@ while running:
         mouth_open = not mouth_open
         mouth_counter = 0
 
-    if mouth_open:
-        current_img = Pac_Man_open
-    else:
-        current_img = Pac_Man_close
+    current_img = Pac_Man_open if mouth_open else Pac_Man_close
 
     if direction == "RIGHT" or direction is None:
         rotated_img = current_img
@@ -109,13 +110,31 @@ while running:
     elif direction == "DOWN":
         rotated_img = pygame.transform.rotate(current_img, -90)
 
+    old_ghost = ghost.copy()
+    if ghost_direction == "LEFT":
+        ghost.x -= ghost_speed
+    elif ghost_direction == "RIGHT":
+        ghost.x += ghost_speed
+    elif ghost_direction == "UP":
+        ghost.y -= ghost_speed
+    elif ghost_direction == "DOWN":
+        ghost.y += ghost_speed
+
+    if any(ghost.colliderect(wall) for wall in maze) or choice(range(20)) == 0:
+        ghost = old_ghost
+        ghost_direction = choice(["LEFT", "RIGHT", "UP", "DOWN"])
+
+    if pacman.colliderect(ghost):
+        running = False
+        print("Game Over! Final Score:", score)
+
     screen.fill((0, 0, 0))
     for wall in maze:
         pygame.draw.rect(screen, (0, 0, 255), wall)
     for dot in dots:
         pygame.draw.circle(screen, (255, 255, 0), dot.center, 4)
     screen.blit(rotated_img, pacman.topleft)
-    screen.blit(Ghost, ghost.topleft)
+    screen.blit(Ghost_img, ghost.topleft)
 
     font = pygame.font.SysFont(None, 36)
     score_text = font.render(f"Score: {score}", True, (255, 255, 255))
