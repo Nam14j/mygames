@@ -5,9 +5,15 @@ pygame.init()
 screen = pygame.display.set_mode((800, 600))
 pygame.display.set_caption("Pac-Man")
 
-Pac_Man_open = pygame.transform.scale(pygame.image.load("pack_man_drawing-removebg-preview.png").convert_alpha(), (25, 25))
-Pac_Man_close = pygame.transform.scale(pygame.image.load("pack_open_drawing-removebg-preview.png").convert_alpha(), (25, 25))
-Ghost_img = pygame.transform.scale(pygame.image.load("Ghost-removebg-preview.png").convert_alpha(), (25, 25))
+Pac_Man_open = pygame.transform.scale(
+    pygame.image.load("pack_man_drawing-removebg-preview.png").convert_alpha(), (25, 25)
+)
+Pac_Man_close = pygame.transform.scale(
+    pygame.image.load("pack_open_drawing-removebg-preview.png").convert_alpha(), (25, 25)
+)
+Ghost_img = pygame.transform.scale(
+    pygame.image.load("Ghost-removebg-preview.png").convert_alpha(), (25, 25)
+)
 
 pacman = Pac_Man_open.get_rect(center=(400, 300))
 speed = 5
@@ -43,16 +49,43 @@ for x in range(70, 730, grid_size):
         if not any(dot_rect.colliderect(wall) for wall in maze):
             dots.append(dot_rect)
 
-ghost = pygame.Rect(0, 0, 25, 25)
-ghost_speed = 3
-valid_spawn = False
-while not valid_spawn:
-    ghost.x = choice(range(70, 730))
-    ghost.y = choice(range(70, 530))
-    if not any(ghost.colliderect(wall) for wall in maze):
-        valid_spawn = True
 
-ghost_direction = choice(["LEFT", "RIGHT", "UP", "DOWN"])
+class Ghost:
+    def __init__(self, walls, speed=3):
+        self.rect = pygame.Rect(0, 0, 25, 25)
+        self.speed = speed
+        self.walls = walls
+        self.spawn()
+        self.direction = choice(["LEFT", "RIGHT", "UP", "DOWN"])
+
+    def spawn(self):
+        valid_spawn = False
+        while not valid_spawn:
+            self.rect.x = choice(range(70, 730))
+            self.rect.y = choice(range(70, 530))
+            if not any(self.rect.colliderect(wall) for wall in self.walls):
+                valid_spawn = True
+
+    def move(self):
+        old_pos = self.rect.copy()
+        if self.direction == "LEFT":
+            self.rect.x -= self.speed
+        elif self.direction == "RIGHT":
+            self.rect.x += self.speed
+        elif self.direction == "UP":
+            self.rect.y -= self.speed
+        elif self.direction == "DOWN":
+            self.rect.y += self.speed
+
+        if any(self.rect.colliderect(wall) for wall in self.walls) or choice(range(20)) == 0:
+            self.rect = old_pos
+            self.direction = choice(["LEFT", "RIGHT", "UP", "DOWN"])
+
+    def draw(self, surface):
+        surface.blit(Ghost_img, self.rect.topleft)
+
+
+ghosts = [Ghost(maze) for _ in range(5)]
 
 clock = pygame.time.Clock()
 running = True
@@ -100,7 +133,6 @@ while running:
         mouth_counter = 0
 
     current_img = Pac_Man_open if mouth_open else Pac_Man_close
-
     if direction == "RIGHT" or direction is None:
         rotated_img = current_img
     elif direction == "LEFT":
@@ -110,23 +142,11 @@ while running:
     elif direction == "DOWN":
         rotated_img = pygame.transform.rotate(current_img, -90)
 
-    old_ghost = ghost.copy()
-    if ghost_direction == "LEFT":
-        ghost.x -= ghost_speed
-    elif ghost_direction == "RIGHT":
-        ghost.x += ghost_speed
-    elif ghost_direction == "UP":
-        ghost.y -= ghost_speed
-    elif ghost_direction == "DOWN":
-        ghost.y += ghost_speed
-
-    if any(ghost.colliderect(wall) for wall in maze) or choice(range(20)) == 0:
-        ghost = old_ghost
-        ghost_direction = choice(["LEFT", "RIGHT", "UP", "DOWN"])
-
-    if pacman.colliderect(ghost):
-        running = False
-        print("Game Over! Final Score:", score)
+    for ghost in ghosts:
+        ghost.move()
+        if pacman.colliderect(ghost.rect):
+            running = False
+            print("Game Over! Final Score:", score)
 
     screen.fill((0, 0, 0))
     for wall in maze:
@@ -134,7 +154,8 @@ while running:
     for dot in dots:
         pygame.draw.circle(screen, (255, 255, 0), dot.center, 4)
     screen.blit(rotated_img, pacman.topleft)
-    screen.blit(Ghost_img, ghost.topleft)
+    for ghost in ghosts:
+        ghost.draw(screen)
 
     font = pygame.font.SysFont(None, 36)
     score_text = font.render(f"Score: {score}", True, (255, 255, 255))
