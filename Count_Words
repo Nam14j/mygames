@@ -1,1 +1,16 @@
+def count_words(sentence):
+    words = []
+    word = ''
+    for x in sentence:
+        if x != ' ':
+            word = word + x
+        else:
+            if word != '':
+                words.append(word)
+                word = ''
 
+    if word != '':
+        words.append(word)
+    return len(words)
+
+print(count_words("       Hello, I      .am a student. "))
