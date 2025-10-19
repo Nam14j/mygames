@@ -1,0 +1,103 @@
+import os
+import random
+import pygame
+import string
+
+pygame.init()
+
+code_directory = os.path.dirname(os.path.abspath(__file__))
+filename = os.path.join(code_directory, "Hang_man_Words.txt")
+
+with open(filename, "r") as file:
+    words = [word.strip().upper() for word in file.read().splitlines() if word.strip()]
+
+if not words:
+    exit()
+
+random_word = random.choice(words)
+
+WIDTH, HEIGHT = 600, 800
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Hangman")
+
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+
+FONT = pygame.font.SysFont("arial", 40)
+
+wrong_guesses = 0
+guessed_letters = []
+
+def draw_gallows(surface):
+    pygame.draw.line(surface, BLACK, (150, 450), (350, 450), 10)
+    pygame.draw.line(surface, BLACK, (250, 450), (250, 100), 10)
+    pygame.draw.line(surface, BLACK, (250, 100), (400, 100), 10)
+    pygame.draw.line(surface, BLACK, (400, 100), (400, 150), 5)
+    if wrong_guesses > 0:
+        pygame.draw.circle(surface, BLACK, (400, 180), 30, 5)
+    if wrong_guesses > 1:
+        pygame.draw.line(surface, BLACK, (400, 210), (400, 300), 5)
+    if wrong_guesses > 2:
+        pygame.draw.line(surface, BLACK, (400, 220), (350, 250), 5)
+    if wrong_guesses > 3:
+        pygame.draw.line(surface, BLACK, (400, 220), (450, 250), 5)
+    if wrong_guesses > 4:
+        pygame.draw.line(surface, BLACK, (400, 300), (350, 350), 5)
+    if wrong_guesses > 5:
+        pygame.draw.line(surface, BLACK, (400, 300), (450, 350), 5)
+
+def draw_word(surface):
+    display_word = ""
+    for letter in random_word:
+        if letter in guessed_letters:
+            display_word += letter + " "
+        else:
+            display_word += "_ "
+    text = FONT.render(display_word.strip(), True, BLACK)
+    surface.blit(text, (50, 500))
+
+def draw_guessed_letters(surface):
+    guessed_text = "Guessed Letters: " + " ".join(guessed_letters)
+    text = FONT.render(guessed_text, True, BLACK)
+    surface.blit(text, (50, 600))
+
+
+MAX_WRONG_GUESSES = 6
+
+running = True
+while running:
+    screen.fill(WHITE)
+    draw_gallows(screen)
+    draw_word(screen)
+    draw_guessed_letters(screen)
+    pygame.display.flip()
+
+    
+    if all(letter in guessed_letters for letter in random_word):
+        screen.fill(WHITE)
+        win_text = FONT.render("You Win! The word was " + random_word, True, BLACK)
+        screen.blit(win_text, (50, HEIGHT // 2))
+        pygame.display.flip()
+        pygame.time.delay(3000)
+        running = False
+
+    
+    if wrong_guesses >= MAX_WRONG_GUESSES:
+        screen.fill(WHITE)
+        lose_text = FONT.render("You Lose! The word was " + random_word, True, BLACK)
+        screen.blit(lose_text, (50, HEIGHT // 2))
+        pygame.display.flip()
+        pygame.time.delay(3000)
+        running = False
+
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+        if event.type == pygame.KEYDOWN:
+            if event.unicode.upper() in string.ascii_uppercase:
+                letter = event.unicode.upper()
+                if letter not in guessed_letters:
+                    guessed_letters.append(letter)
+                    if letter not in random_word:
+                        wrong_guesses += 1
+pygame.quit()
