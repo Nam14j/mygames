@@ -6,11 +6,6 @@ asteroid_hit_laser = 0
 asteroid_count = 4
 
 screen_width, screen_height = 800, 600
-cannon_width, cannon_height = 100, 150
-
-cannon_x = (screen_width - cannon_width) // 7
-cannon_y = (screen_height - cannon_height) // 2 + 175
-cannon_angle = 0
 
 pygame.init()
 pygame.font.init()
@@ -24,26 +19,57 @@ cannon = pygame.transform.scale(cannon, (150, 100))
 asteroid_img = pygame.image.load("asteroid.png").convert_alpha()
 asteroid_img = pygame.transform.scale(asteroid_img, (50, 50))
 
+cannon_x = (screen_width - cannon.get_width()) // 2
+cannon_y = (screen_height - cannon.get_height()) // 2
+
 clock = pygame.time.Clock()
 running = True
 game_over = False
 start_ticks = pygame.time.get_ticks()
+cannon_angle = 0
 
 class Asteroid:
-    def __init__(self, y, speed):
-        self.x = random.randint(0, screen_width - asteroid_img.get_width())
-        self.y = y
-        self.speed = speed
+    def __init__(self):
+        self.speed = random.randint(3, 6)
+        side = random.choice(['top', 'bottom', 'left', 'right'])
+        if side == 'top':
+            self.x = random.randint(0, screen_width - asteroid_img.get_width())
+            self.y = -asteroid_img.get_height()
+            self.direction = 'down'
+        elif side == 'bottom':
+            self.x = random.randint(0, screen_width - asteroid_img.get_width())
+            self.y = screen_height
+            self.direction = 'up'
+        elif side == 'left':
+            self.x = -asteroid_img.get_width()
+            self.y = random.randint(0, screen_height - asteroid_img.get_height())
+            self.direction = 'right'
+        elif side == 'right':
+            self.x = screen_width
+            self.y = random.randint(0, screen_height - asteroid_img.get_height())
+            self.direction = 'left'
         self.rect = asteroid_img.get_rect(topleft=(self.x, self.y))
 
     def draw(self, screen):
         screen.blit(asteroid_img, (self.x, self.y))
 
     def update(self):
-        if self.y > screen_height:
-            self.y = -asteroid_img.get_height()
-            self.x = random.randint(0, screen_width - asteroid_img.get_width())
-        self.y += self.speed
+        if self.direction == 'down':
+            self.y += self.speed
+            if self.y > screen_height:
+                self.__init__()
+        elif self.direction == 'up':
+            self.y -= self.speed
+            if self.y < -asteroid_img.get_height():
+                self.__init__()
+        elif self.direction == 'right':
+            self.x += self.speed
+            if self.x > screen_width:
+                self.__init__()
+        elif self.direction == 'left':
+            self.x -= self.speed
+            if self.x < -asteroid_img.get_width():
+                self.__init__()
         self.rect.topleft = (self.x, self.y)
 
 class Laser:
@@ -62,18 +88,17 @@ class Laser:
     def draw(self, screen):
         pygame.draw.rect(screen, (255, 0, 0), self.rect)
 
-
 lasers = []
-asteroids = []
-
-for i in range(asteroid_count):
-    asteroid_y = random.randint(-600, -10)
-    asteroid_speed = random.randint(3, 6)
-    asteroids.append(Asteroid(asteroid_y, asteroid_speed))
+asteroids = [Asteroid() for _ in range(asteroid_count)]
 
 while running:
     screen.fill((0, 0, 0))
     keys = pygame.key.get_pressed()
+
+    cannon_center = (
+        cannon_x + cannon.get_width() // 2,
+        cannon_y + cannon.get_height() // 2
+    )
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -82,12 +107,8 @@ while running:
             if game_over:
                 if event.key == pygame.K_r:
                     cannon_x = (screen_width - cannon.get_width()) // 2
-                    cannon_y = (screen_height - cannon.get_height()) // 2 + 175
-                    asteroids = []
-                    for i in range(asteroid_count):
-                        asteroid_y = random.randint(-600, -10)
-                        asteroid_speed = random.randint(3, 6)
-                        asteroids.append(Asteroid(asteroid_y, asteroid_speed))
+                    cannon_y = (screen_height - cannon.get_height()) // 2
+                    asteroids = [Asteroid() for _ in range(asteroid_count)]
                     lasers = []
                     start_ticks = pygame.time.get_ticks()
                     asteroid_hit_laser = 0
@@ -116,7 +137,7 @@ while running:
 
     for laser in lasers[:]:
         laser.update()
-        if laser.y < 0:
+        if laser.y < 0 or laser.y > screen_height or laser.x < 0 or laser.x > screen_width:
             lasers.remove(laser)
         else:
             for asteroid in asteroids[:]:
@@ -124,9 +145,7 @@ while running:
                     asteroid_hit_laser += 1
                     asteroids.remove(asteroid)
                     lasers.remove(laser)
-                    new_y = random.randint(-600, -10)
-                    new_speed = random.randint(3, 6)
-                    asteroids.append(Asteroid(new_y, new_speed))
+                    asteroids.append(Asteroid())
                     break
 
     for asteroid in asteroids:
@@ -135,7 +154,6 @@ while running:
     for laser in lasers:
         laser.draw(screen)
 
-    cannon_center = (cannon_x + cannon.get_width() // 2, cannon_y + cannon.get_height() // 2)
     rotated_cannon = pygame.transform.rotate(cannon, cannon_angle)
     rot_rect = rotated_cannon.get_rect(center=cannon_center)
     screen.blit(rotated_cannon, rot_rect)
@@ -147,7 +165,7 @@ while running:
             elapsed_seconds = (pygame.time.get_ticks() - start_ticks) // 1000
 
     if game_over:
-        text_surface = font.render (f'You lose! R to reset Q to quit , Your time: {elapsed_seconds}s', True, (255, 255, 0))
+        text_surface = font.render(f'You lose! R to reset Q to quit , Your time: {elapsed_seconds}s', True, (255, 255, 0))
         text_rect = text_surface.get_rect(center=(screen_width // 2, screen_height // 2))
         screen.blit(text_surface, text_rect)
 
