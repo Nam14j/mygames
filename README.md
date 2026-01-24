@@ -48,9 +48,3 @@ Note: some files in this repo are plain Python scripts without a `.py` extension
 - These examples are intentionally simple — prefer small, focused changes.
 - When modifying a game, run it locally and keep asset paths relative to the game folder.
 - If adding dependencies, include them in a `requirements.txt` at repo root.
-
-If you'd like, I can:
-- add a `requirements.txt` and a small launcher script to pick and run games,
-- or standardize filenames to use `.py` consistently.
-
-Please tell me which change you'd like next.

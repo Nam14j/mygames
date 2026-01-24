@@ -1,6 +1,6 @@
 import pygame
 import random
-asteroid_hit_laser = 0
+asteroid_hit_laser = 0 
 
 new_width = 100
 new_height = 100
@@ -94,6 +94,34 @@ while running:
                     laser_x = rocket_x + rocket_img.get_width() // 2 - 2
                     laser_y = rocket_y
                     lasers.append(Laser(laser_x, laser_y, 10))
+
+            if asteroid_hit_laser >= 20:
+                asteroid_count += 2
+                screen.blit(rocket_img, (rocket_x, rocket_y))
+
+            if asteroid_hit_laser >= 40:
+                new_speed = random.randint(3, 6)
+
+            if asteroid_hit_laser >= 60:
+                new_speed = random.randint(6, 10)
+
+            if asteroid_hit_laser >= 80:
+                new_speed = random.randint(10, 20)
+
+            if asteroid_hit_laser >= 100:
+                new_speed = random.randint(20, 30)
+
+            if asteroid_hit_laser >= 120:
+                new_speed = random.randint(30, 40)
+
+            if asteroid_hit_laser >= 140:
+                font = pygame.font.SysFont('Arial', 72)
+                text_surface = font.render(
+                f'You win, WOW good job. did you expect something? {elapsed_seconds}s', True, (255, 255, 0))
+                text_rect = text_surface.get_rect(center=(screen_width // 2, screen_height // 2))
+                screen.blit(text_surface, text_rect)
+
+
 
     if not game_over:
         keys = pygame.key.get_pressed()
