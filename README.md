@@ -8,6 +8,7 @@ This repository contains several standalone game examples (procedural pygame scr
 - `Hang_Man/` — Hangman implementation (`Hang_Man_Code`, uses `Hang_man_Word.txt`).
 - `pacman/` — a small Pac-Man style demo (`mygame.py`).
 - `rocket_game/` — rocket game demo (`game.py`).
+- `SONAR/` — Sonar treasure hunting game (`Sonar-Only-Terminal.py`).
 - `tic-tac-toe/` — Tic-Tac-Toe examples (`Tic-Tak-Toe.py` and `Pygame/Faster_Tic_Tack_Toe.py`).
 
 **Quick start (requirements)**
