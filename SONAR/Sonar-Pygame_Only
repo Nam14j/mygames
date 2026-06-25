@@ -1,0 +1,226 @@
+import random
+import sys
+import math
+import pygame
+
+pygame.init()
+screen = pygame.display.set_mode((1200, 700))
+pygame.display.set_caption('Sonar')
+
+font = pygame.font.SysFont('monospace', 18)
+
+def getNewBoard():
+    board = []
+    for x in range(60):
+        board.append([])
+        for y in range(15):
+            if random.randint(0, 1) == 0:
+                board[x].append('~')
+            else:
+                board[x].append('`')
+    return board
+
+def processPygameEvents():
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            pygame.quit()
+            sys.exit()
+
+def drawBoard(board):
+    processPygameEvents()
+    screen.fill((0, 0, 50))
+
+    tensDigitsLine = '   ' 
+    for i in range(60):
+        if i % 10 == 0 and i != 0:
+            tensDigitsLine += str(i // 10)
+        else:
+            tensDigitsLine += ' '
+            
+    onesDigitsLine = '   ' + ('0123456789' * 6)
+
+    text_surface = font.render(tensDigitsLine, True, (255, 255, 255))
+    screen.blit(text_surface, (10, 10))
+    text_surface = font.render(onesDigitsLine, True, (255, 255, 255))
+    screen.blit(text_surface, (10, 30))
+
+    for row in range(15):
+        extraSpace = ' ' if row < 10 else ''
+        boardRow = ''
+        for column in range(60):
+            boardRow += board[column][row]
+
+        text_surface = font.render(f'{extraSpace}{row} {boardRow} {row}', True, (255, 255, 255))
+        screen.blit(text_surface, (10, 60 + row * 20)) 
+
+    bottom_y = 60 + 15 * 20
+    text_surface = font.render(tensDigitsLine, True, (255, 255, 255))
+    screen.blit(text_surface, (10, bottom_y + 10))
+    text_surface = font.render(onesDigitsLine, True, (255, 255, 255))
+    screen.blit(text_surface, (10, bottom_y + 30))
+    
+    pygame.display.flip()
+
+def getRandomChests(numChests):
+    chests = []
+    while len(chests) < numChests:
+        newChest = [random.randint(0, 59), random.randint(0, 14)]
+        if newChest not in chests:
+            chests.append(newChest)
+    return chests
+
+def isOnBoard(x, y):
+    return x >= 0 and x <= 59 and y >= 0 and y <= 14
+
+def makeMove(board, chests, x, y):
+    smallestDistance = 100
+    for chest in chests:
+        distance = math.sqrt((chest[0] - x) ** 2 + (chest[1] - y) ** 2)
+        if distance < smallestDistance:
+            smallestDistance = distance
+
+    smallestDistance = round(smallestDistance)
+
+    if smallestDistance == 0:
+        chests.remove([x, y])
+        return 'You found a sunken treasure chest!'
+    else:
+        if smallestDistance < 10:
+            board[x][y] = str(smallestDistance)
+            return f'Treasure detected at a distance of {smallestDistance} from the sonar device.'
+        else:
+            board[x][y] = 'X'
+            return 'Sonar did not detect anything. All treasure chests out of range.'
+
+def make_input_box():
+    input_box = pygame.Rect(300, 15, 600, 30)
+    color_inactive = pygame.Color('lightskyblue3')
+    color_active = pygame.Color('dodgerblue2')
+    color = color_inactive
+    active = False
+    text = ''
+    box_font = pygame.font.Font(None, 32)
+    return input_box, color_inactive, color_active, color, active, text, box_font
+
+def type_input_box(input_box, color_inactive, color_active, color, active, text, font):
+    submitted = False
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            pygame.quit()
+            sys.exit()
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if input_box.collidepoint(event.pos):
+                active = not active
+            else:
+                active = False
+            color = color_active if active else color_inactive
+        if event.type == pygame.KEYDOWN:
+            if active:
+                if event.key == pygame.K_RETURN:
+                    submitted = True
+                elif event.key == pygame.K_BACKSPACE:
+                    text = text[:-1]
+                else:
+                    text += event.unicode
+
+    pygame.draw.rect(screen, (0, 0, 50), (input_box.x, input_box.y, 600, 40))
+    txt_surface = font.render(text, True, (255, 255, 255))
+    width = max(600, txt_surface.get_width() + 10)
+    input_box.w = width
+    screen.blit(txt_surface, (input_box.x + 5, input_box.y + 5))
+    pygame.draw.rect(screen, color, input_box, 2)
+    pygame.display.flip()
+    return text, submitted, input_box, color_inactive, color_active, color, active, text
+
+def enterPlayerMove():
+    input_box, color_inactive, color_active, color, active, text, box_font = make_input_box()
+    pygame.draw.rect(screen, (0, 0, 50), (0, 0, 1200, 60)) 
+    text_surface = font.render('Drop next sonar (0-59 0-14):', True, (255, 255, 255))
+    screen.blit(text_surface, (10, 15))
+    pygame.display.flip()
+    
+    while True:
+        text, submitted, input_box, color_inactive, color_active, color, active, text = type_input_box(
+            input_box, color_inactive, color_active, color, active, text, box_font
+        )
+        if submitted:
+            move = text.split()
+            if len(move) == 2 and move[0].isdigit() and move[1].isdigit():
+                x = int(move[0])
+                y = int(move[1])
+                if isOnBoard(x, y):
+                    return [x, y]
+            text = ''
+            pygame.draw.rect(screen, (0, 0, 50), (0, 0, 300, 60))
+            error_surface = font.render('Invalid! Use (0-59 0-14):', True, (255, 100, 100))
+            screen.blit(error_surface, (10, 15))
+            pygame.display.flip()
+
+def showInstructions():
+    screen.fill((0, 0, 50))
+    text_surface = font.render("Instructions: Find all sunken treasure chests before running out of sonar devices.", True, (255, 255, 255))
+    screen.blit(text_surface, (10, 10))
+    text_surface2 = font.render("Check the Terminal to input coordinates! Press Enter in the Terminal to continue...", True, (255, 255, 255))
+    screen.blit(text_surface2, (10, 40))
+    pygame.display.flip()
+    processPygameEvents()
+    input()
+
+screen.fill((0, 0, 50))
+pygame.display.flip()
+processPygameEvents()
+
+text_surface = font.render('Check Terminal: Would you like to view the instructions? (yes/no)', True, (255, 255, 255))
+screen.blit(text_surface, (10, 10))
+pygame.display.flip()
+if input().lower().startswith('y'):
+    showInstructions()
+
+master_board = getNewBoard()
+
+while True:
+    sonarDevices = 20
+    theBoard = [column[:] for column in master_board]
+    theChests = getRandomChests(3)
+    drawBoard(theBoard)
+
+    while sonarDevices > 0:
+        processPygameEvents()
+        pygame.draw.rect(screen, (0, 0, 50), (0, 0, 1200, 60))
+        text_surface = font.render(f'Devices left: {sonarDevices} | Chests remaining: {len(theChests)}', True, (255, 255, 255))
+        screen.blit(text_surface, (650, 45))
+        pygame.display.flip()
+        
+        x, y = enterPlayerMove()
+        result = makeMove(theBoard, theChests, x, y)
+        print(result)
+        drawBoard(theBoard)
+
+        if len(theChests) == 0:
+            pygame.draw.rect(screen, (0, 0, 50), (0, 0, 1200, 60))
+            text_surface = font.render('Congratulations! You found all the sunken treasure chests!', True, (255, 255, 255))
+            screen.blit(text_surface, (300, 30))
+            pygame.display.flip()
+            processPygameEvents()
+            break
+
+        sonarDevices -= 1
+
+    if sonarDevices == 0:
+        pygame.draw.rect(screen, (0, 0, 50), (0, 0, 1200, 60))
+        text_surface = font.render('Game over! You ran out of sonar devices!', True, (255, 255, 255))
+        screen.blit(text_surface, (300, 10))
+        
+        text_surface = font.render('The remaining chests were here:', True, (255, 255, 255))
+        screen.blit(text_surface, (300, 30))
+        
+        for idx, chest in enumerate(theChests):
+            text_surface = font.render(f'{chest[0]}, {chest[1]}', True, (255, 255, 255))
+            screen.blit(text_surface, (650 + (idx * 80), 30))
+        pygame.display.flip()
+        processPygameEvents()
+
+    print('Do you want to play again? (yes/no)')
+    processPygameEvents()
+    if not input().lower().startswith('y'):
+        sys.exit()
