@@ -7,6 +7,7 @@ This repository contains several standalone game examples (procedural pygame scr
 - `Cannon_Shot/` — simple cannon vs. falling asteroids (`Cannon_Shot_game`).
 - `Hang_Man/` — Hangman implementation (`Hang_Man_Code`, uses `Hang_man_Word.txt`).
 - `pacman/` — a small Pac-Man style demo (`mygame.py`).
+- `Ping Pong/` — a two-player Pong clone (`Ping_Pong.py`) with keyboard controls.
 - `rocket_game/` — rocket game demo (`game.py`).
 - `SONAR/` — Sonar treasure hunting game (`Sonar-Only-Terminal.py`).
 - `tic-tac-toe/` — Tic-Tac-Toe examples (`Tic-Tak-Toe.py` and `Pygame/Faster_Tic_Tack_Toe.py`).
@@ -29,11 +30,17 @@ pip install pygame
 ```bash
 python3 Cannon_Shot/Cannon_Shot_game
 python3 pacman/mygame.py
+python3 "Ping Pong/Ping_Pong.py"
 python3 rocket_game/game.py
 python3 tic-tac-toe/Tic-Tak-Toe.py
 ```
 
 Note: some files in this repo are plain Python scripts without a `.py` extension (for example `Cannon_Shot/Cannon_Shot_game`). Use `python3 <file>` to run them or add a `.py` extension if you prefer.
+
+**Ping Pong controls**
+- Player 1: `W` (up) and `S` (down)
+- Player 2: `UP` and `DOWN` arrows
+- Press `R` to reset the round and score
 
 **Project notes & common patterns**
 - Most games use `pygame` and are single-file procedural scripts (global state, main loop, simple classes for sprites such as `Asteroid`/`Laser` in `Cannon_Shot`).
